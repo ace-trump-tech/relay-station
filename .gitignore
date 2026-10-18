@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+data/
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.sqlite*
+*.db*
+*.key
+*.log
+dist/
+build/
+*.exe
+release/

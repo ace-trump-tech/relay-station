@@ -1,0 +1,25 @@
+services:
+  relay:
+    build: .
+    ports:
+      - "127.0.0.1:8765:8765"
+    environment:
+      RELAY_ORIGIN: ${RELAY_ORIGIN:-http://localhost:8765}
+      RELAY_TIMEZONE: ${RELAY_TIMEZONE:-Asia/Shanghai}
+      RELAY_SECURE_COOKIE: ${RELAY_SECURE_COOKIE:-0}
+      RELAY_ADMIN_PASSWORD: ${RELAY_ADMIN_PASSWORD:?Set a 12+ character password in .env}
+      RELAY_DATA_DIR: /app/data
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      AGENT_BASE_URL: ${AGENT_BASE_URL:-}
+      AGENT_API_KEY: ${AGENT_API_KEY:-}
+      AGENT_MODEL: ${AGENT_MODEL:-}
+    volumes:
+      - relay-data:/app/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  relay-data:

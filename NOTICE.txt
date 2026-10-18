@@ -1,0 +1,8 @@
+Relay Station 0.3.0
+Copyright 2026 Relay Station contributors. MIT License.
+
+This Windows distribution bundles Python and third-party open-source libraries.
+Third-party components retain their respective licenses. See the LICENSE file
+and THIRD_PARTY_LICENSES.txt distributed with the release archive.
+
+Microsoft Edge WebView2 Runtime is provided by Microsoft and is not bundled.

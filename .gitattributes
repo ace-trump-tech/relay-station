@@ -1,0 +1,14 @@
+* text=auto
+*.py text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.sh text eol=lf
+*.ps1 text eol=crlf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.png binary
+*.ico binary
+# Preserve upstream notices exactly, including their whitespace.
+packaging/THIRD_PARTY_LICENSES.txt -whitespace

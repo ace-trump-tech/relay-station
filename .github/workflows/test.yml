@@ -1,0 +1,61 @@
+name: Test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check static/app.js
+      - run: node --check static/organizer.js
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t relay-test .
+      - run: docker run -d --name relay-test -p 127.0.0.1:8765:8765 -e RELAY_ADMIN_PASSWORD=ci-only-disposable-password relay-test
+      - run: curl --retry 10 --retry-all-errors --retry-delay 2 --max-time 5 --fail http://localhost:8765/health
+      - if: failure()
+        run: docker logs relay-test
+  windows-executable:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements-build.txt
+      - run: python packaging/collect_licenses.py
+      - run: python -m PyInstaller --noconfirm Relay.spec
+      - name: Verify packaged app without a Python environment
+        shell: pwsh
+        run: |
+          $exePath = (Resolve-Path dist/Relay.exe).Path
+          $smokeData = Join-Path $env:RUNNER_TEMP 'relay-smoke-data'
+          $smokeReport = Join-Path $env:RUNNER_TEMP 'relay-smoke.json'
+          $env:PATH = "$env:SystemRoot/System32;$env:SystemRoot"
+          $process = Start-Process -FilePath $exePath -ArgumentList @('--smoke-test', '--data-dir', $smokeData, '--report', $smokeReport) -Wait -PassThru -WindowStyle Hidden
+          if ($process.ExitCode -ne 0) { throw 'Packaged application failed to start.' }
+          $result = Get-Content -LiteralPath $smokeReport -Raw | ConvertFrom-Json
+          if (-not $result.ok -or -not $result.frozen) { throw 'Invalid packaged smoke report.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Relay-windows-x64
+          path: |
+            dist/Relay.exe
+            packaging/THIRD_PARTY_LICENSES.txt
+            LICENSE
+            NOTICE.txt
